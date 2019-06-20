@@ -10,9 +10,9 @@ using Newtonsoft.Json;
 
 namespace MyFunctionApp
 {
-    public static class Function1
+    public static class HttpTrigger
     {
-        [FunctionName("Function1")]
+        [FunctionName("HttpTrigger")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
@@ -22,7 +22,9 @@ namespace MyFunctionApp
             string name = req.Query["name"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+
             dynamic data = JsonConvert.DeserializeObject(requestBody);
+
             name = name ?? data?.name;
 
             return name != null
