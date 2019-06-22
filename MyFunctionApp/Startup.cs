@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyFunctionApp.Services;
+using Polly;
+using System;
 using System.IO;
 
 [assembly: FunctionsStartup(typeof(MyFunctionApp.Startup))]
@@ -53,6 +55,13 @@ namespace MyFunctionApp
             // A single instance will be created and reused
             // with every service request
             builder.Services.AddSingleton<IGlobalIdProvider, CommonIdProvider>();
+
+
+            builder.Services.AddTransient<GitHubService>();
+
+            builder.Services.AddHttpClient<UnreliableEndpointCallerService>()
+                .AddTransientHttpErrorPolicy(p =>
+                    p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(600)));
         }
     }
 }
