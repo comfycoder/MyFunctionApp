@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace MyFunctionApp.Services
 {
+    // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/http-requests?view=aspnetcore-2.2
     public class GitHubService
     {
         public HttpClient Client { get; }

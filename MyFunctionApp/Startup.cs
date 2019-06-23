@@ -35,6 +35,8 @@ namespace MyFunctionApp
                 .AddEnvironmentVariables()
                 .Build();
 
+            builder.Services.AddSingleton<SecurityService>();
+
             // Register MyServiceA as transient.
             // A new instance will be returned every
             // time a service request is made
