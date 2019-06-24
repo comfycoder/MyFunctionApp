@@ -5,7 +5,6 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
@@ -59,7 +58,9 @@ namespace MyFunctionApp.Services
                 return null;
             }
 
-            var config = await _configurationManager.GetConfigurationAsync(CancellationToken.None);
+            var discoveryDocument = await _configurationManager.GetConfigurationAsync(CancellationToken.None);
+
+            var signingKeys = discoveryDocument.SigningKeys;
 
             var issuer = Environment.GetEnvironmentVariable("ISSUER");
 
@@ -77,12 +78,12 @@ namespace MyFunctionApp.Services
                 ValidateIssuer = true,
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKeys = config.SigningKeys,
+                IssuerSigningKeys = signingKeys,
 
                 ValidateLifetime = true,
 
                 // Allow for some drift in server time
-                // (a lower value is better; we recommend two minutes or less)
+                // (a lower value is better; recommend two minutes or less)
                 ClockSkew = TimeSpan.FromMinutes(2),
             };
 
@@ -121,11 +122,13 @@ namespace MyFunctionApp.Services
 
                     tries++;
                 }
-                catch (SecurityTokenException ex)
+                catch (SecurityTokenValidationException stvex)
                 {
-                    log.LogError(ex, "ERROR: SecurityTokenException Ocurred");
-
-                    return null;
+                    log.LogError(stvex, "ERROR: ValidateToken: Token failed validation.");
+                }
+                catch (ArgumentException argex)
+                {
+                    log.LogError(argex, "ERROR: ValidateToken: Token was not well-formed or was invalid for some other reason.");
                 }
             }
 
@@ -190,7 +193,7 @@ namespace MyFunctionApp.Services
                 ValidateIssuer = true,
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKeys = discoveryDocument.SigningKeys,
+                IssuerSigningKeys = signingKeys,
 
                 ValidateLifetime = true,
 
